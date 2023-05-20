@@ -1,10 +1,10 @@
 import { ReactNode } from 'react';
 
-export type Extra = {
+export type Payload = {
   index: number;
 };
 
 export type Rule = {
   pattern: string | RegExp;
-  render: (content: string, extra: Extra) => ReactNode;
+  render: (content: string, payload: Payload) => ReactNode;
 };

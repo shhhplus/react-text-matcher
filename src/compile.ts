@@ -1,16 +1,27 @@
-import { Rule, Extra } from './types';
+import { Rule, Payload } from './types';
 
-type Node =
+type MatchedNode = {
+  text: string;
+  render: Rule['render'];
+  payload: Payload;
+};
+
+type UnmatchedNode = string;
+
+type Node = MatchedNode | UnmatchedNode;
+
+type Task =
   | {
-      text: string;
-      render: Rule['render'];
-      extra: Extra;
+      done: true;
+      node: MatchedNode;
     }
-  | string;
+  | {
+      done: false;
+      node: UnmatchedNode;
+    };
 
-type Task = {
-  node: Node;
-  done: boolean;
+type RegRule = Omit<Rule, 'pattern'> & {
+  pattern: RegExp;
 };
 
 export default function compile(content: string, rules: Rule[]): Node[] {
@@ -18,43 +29,59 @@ export default function compile(content: string, rules: Rule[]): Node[] {
     return [];
   }
 
-  const rules2use = rules.filter((m) => m.pattern);
+  const rules2use: RegRule[] = rules
+    .filter((r) => r.pattern)
+    .map((r) => {
+      if (typeof r.pattern === 'string') {
+        return {
+          ...r,
+          pattern: new RegExp(`${r.pattern}`, 'g'),
+        };
+      } else {
+        return {
+          ...r,
+          pattern: r.pattern,
+        };
+      }
+    });
 
   if (rules2use.length === 0) {
     return [content];
   }
 
-  let tasks: Task[] = [{ node: content, done: false }];
+  let tasks: Task[] = [{ done: false, node: content }];
   for (const rule of rules2use) {
+    let skipable = false;
     tasks = tasks.reduce<Task[]>((acc, cur) => {
-      if (!cur.done && typeof cur.node === 'string') {
-        const list = split(cur.node, rule);
-        return [...acc, ...list];
-      } else {
+      if (cur.done || skipable) {
         return [...acc, cur];
       }
+      const result = split(cur.node, rule);
+      skipable = result.skipable;
+      return [...acc, ...result.tasks];
     }, []);
   }
   const nodes = tasks.map((t) => t.node);
   let index = 0;
   nodes.forEach((node) => {
     if (typeof node !== 'string') {
-      node.extra.index = index;
-      index++;
+      node.payload.index = index++;
     }
   });
 
   return nodes;
 }
 
-const split = (content: string, rule: Rule): Task[] => {
-  let regex;
-  if (typeof rule.pattern === 'string') {
-    regex = new RegExp(`${rule.pattern}`, 'g');
-  } else {
-    regex = rule.pattern;
-  }
+const split = (
+  content: string,
+  rule: RegRule,
+): {
+  tasks: Task[];
+  skipable: boolean;
+} => {
+  const regex = rule.pattern;
   const tasks: Task[] = [];
+  let skipable = false;
   let cursor = 0;
   let result = null;
   while ((result = regex.exec(content)) !== null) {
@@ -62,29 +89,31 @@ const split = (content: string, rule: Rule): Task[] => {
     const index = result.index;
     if (index !== cursor) {
       tasks.push({
-        node: content.substring(cursor, index),
         done: false,
+        node: content.substring(cursor, index),
       });
     }
+
     tasks.push({
+      done: true,
       node: {
         text: value,
         render: rule.render,
-        extra: { index: -1 },
+        payload: { index: -1 },
       },
-      done: true,
     });
     cursor = index + value.length;
 
     if (!regex.global) {
+      skipable = true;
       break;
     }
   }
   if (cursor < content.length) {
     tasks.push({
-      node: content.substring(cursor),
       done: false,
+      node: content.substring(cursor),
     });
   }
-  return tasks;
+  return { tasks, skipable };
 };

@@ -17,7 +17,7 @@ const TextMatcher: FC<TextMatcherProps> = ({ rules, children }) => {
           <Fragment key={idx}>
             {typeof node === 'string'
               ? node
-              : node.render(node.text, node.extra)}
+              : node.render(node.text, node.payload)}
           </Fragment>
         );
       })}

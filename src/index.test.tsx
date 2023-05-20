@@ -69,28 +69,18 @@ describe('TextMatcher', () => {
   });
 
   test(`multiple matched with multiple rule should works`, () => {
-    const text = 'AppleTodayFoodAppleHappySunFood';
+    const text = 'AppleTodayFoodAppleSunAppleFoodapple';
     const rules: Rule[] = [
       {
         pattern: new RegExp('food', 'gi'),
-        render: (content, extra) => {
-          return (
-            <span style={{ color: 'green' }}>
-              {extra.index}
-              {content}
-            </span>
-          );
+        render: (content) => {
+          return <span style={{ color: 'green' }}>{content}</span>;
         },
       },
       {
-        pattern: 'Apple',
-        render: (content, extra) => {
-          return (
-            <span style={{ color: 'red' }}>
-              {extra.index}
-              {content}
-            </span>
-          );
+        pattern: new RegExp('Apple'),
+        render: (content) => {
+          return <span style={{ color: 'red' }}>{content}</span>;
         },
       },
     ];
@@ -99,7 +89,7 @@ describe('TextMatcher', () => {
     );
 
     expect(container.innerHTML).toEqual(
-      `<span style="color: red;">0Apple</span>Today<span style="color: green;">1Food</span><span style="color: red;">2Apple</span>HappySun<span style="color: green;">3Food</span>`,
+      `<span style="color: red;">Apple</span>Today<span style="color: green;">Food</span>AppleSunApple<span style="color: green;">Food</span>apple`,
     );
   });
 

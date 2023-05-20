@@ -24,20 +24,20 @@ const Demo = () => {
     return [
       {
         pattern: 'everyone',
-        render: (content, extra) => {
+        render: (content, payload) => {
           return (
             <span style={{ color: 'green' }}>
-              {extra.index}.{content}
+              {payload.index}.{content}
             </span>
           );
         },
       },
       {
         pattern: 'birthday',
-        render: (content, extra) => {
+        render: (content, payload) => {
           return (
             <span style={{ color: 'red' }}>
-              {extra.index}.{content}
+              {payload.index}.{content}
             </span>
           );
         },
@@ -64,20 +64,20 @@ const Demo = () => {
     return [
       {
         pattern: new RegExp('food', 'gi'),
-        render: (content, extra) => {
+        render: (content, payload) => {
           return (
             <span style={{ color: 'green' }}>
-              {extra.index}.{content}
+              {payload.index}.{content}
             </span>
           );
         },
       },
       {
         pattern: 'Apple',
-        render: (content, extra) => {
+        render: (content, payload) => {
           return (
             <span style={{ color: 'red' }}>
-              {extra.index}.{content}
+              {payload.index}.{content}
             </span>
           );
         },

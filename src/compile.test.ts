@@ -33,7 +33,7 @@ describe('compile', () => {
       compile(content, [{ pattern: 'party', render: mockRender }]),
     ).toMatchObject([
       'Welcome to my birthday ',
-      { text: 'party', render: mockRender, extra: { index: 0 } },
+      { text: 'party', render: mockRender },
       '.',
     ]);
   });
@@ -45,9 +45,9 @@ describe('compile', () => {
       compile(content, [{ pattern: 'party', render: mockRender }]),
     ).toMatchObject([
       'hi, ',
-      { text: 'party', render: mockRender, extra: { index: 0 } },
+      { text: 'party', render: mockRender },
       ' time. Welcome to my birthday ',
-      { text: 'party', render: mockRender, extra: { index: 1 } },
+      { text: 'party', render: mockRender },
       '.',
     ]);
   });
@@ -58,7 +58,7 @@ describe('compile', () => {
     expect(
       compile(content, [{ pattern: 'party', render: mockRender }]),
     ).toMatchObject([
-      { text: 'party', render: mockRender, extra: { index: 0 } },
+      { text: 'party', render: mockRender },
       '. Welcome everyone.',
     ]);
   });
@@ -68,10 +68,7 @@ describe('compile', () => {
     const mockRender: Rule['render'] = jest.fn();
     expect(
       compile(content, [{ pattern: 'party', render: mockRender }]),
-    ).toMatchObject([
-      'Welcome to my ',
-      { text: 'party', render: mockRender, extra: { index: 0 } },
-    ]);
+    ).toMatchObject(['Welcome to my ', { text: 'party', render: mockRender }]);
   });
 
   test('single rule with regex should works', () => {
@@ -81,7 +78,7 @@ describe('compile', () => {
     expect(
       compile(content, [{ pattern: /apple/, render: mockRender1 }]),
     ).toMatchObject([
-      { text: 'apple', render: mockRender1, extra: { index: 0 } },
+      { text: 'apple', render: mockRender1 },
       '_banana_Apple_sun_food',
     ]);
 
@@ -90,7 +87,7 @@ describe('compile', () => {
       compile(content, [{ pattern: /Apple/, render: mockRender2 }]),
     ).toMatchObject([
       'apple_banana_',
-      { text: 'Apple', render: mockRender2, extra: { index: 0 } },
+      { text: 'Apple', render: mockRender2 },
       '_sun_food',
     ]);
 
@@ -98,9 +95,9 @@ describe('compile', () => {
     expect(
       compile(content, [{ pattern: /(Apple)|(apple)/g, render: mockRender3 }]),
     ).toMatchObject([
-      { text: 'apple', render: mockRender3, extra: { index: 0 } },
+      { text: 'apple', render: mockRender3 },
       '_banana_',
-      { text: 'Apple', render: mockRender3, extra: { index: 1 } },
+      { text: 'Apple', render: mockRender3 },
       '_sun_food',
     ]);
 
@@ -108,28 +105,30 @@ describe('compile', () => {
     expect(
       compile(content, [{ pattern: /apple/gi, render: mockRender4 }]),
     ).toMatchObject([
-      { text: 'apple', render: mockRender4, extra: { index: 0 } },
+      { text: 'apple', render: mockRender4 },
       '_banana_',
-      { text: 'Apple', render: mockRender4, extra: { index: 1 } },
+      { text: 'Apple', render: mockRender4 },
       '_sun_food',
     ]);
   });
 
   test('multiple rules with regex should works', () => {
-    const content = 'apple_banana_Apple_sun_food';
+    const content = 'apple_sun_banana_Apple_sun_food_sun';
     const mockRender1: Rule['render'] = jest.fn();
     const mockRender2: Rule['render'] = jest.fn();
 
     expect(
       compile(content, [
-        { pattern: 'apple', render: mockRender1 },
-        { pattern: 'Apple', render: mockRender2 },
+        { pattern: new RegExp('apple', 'gi'), render: mockRender1 },
+        { pattern: new RegExp('sun'), render: mockRender2 },
       ]),
     ).toMatchObject([
-      { text: 'apple', render: mockRender1, extra: { index: 0 } },
+      { text: 'apple', render: mockRender1 },
+      '_',
+      { text: 'sun', render: mockRender2 },
       '_banana_',
-      { text: 'Apple', render: mockRender2, extra: { index: 1 } },
-      '_sun_food',
+      { text: 'Apple', render: mockRender1 },
+      '_sun_food_sun',
     ]);
   });
 
@@ -144,9 +143,9 @@ describe('compile', () => {
       ]),
     ).toMatchObject([
       'Welcome ',
-      { text: 'to', render: mockRender, extra: { index: 0 } },
+      { text: 'to', render: mockRender },
       ' my ',
-      { text: 'party', render: mockRender, extra: { index: 1 } },
+      { text: 'party', render: mockRender },
     ]);
 
     expect(
@@ -154,9 +153,38 @@ describe('compile', () => {
         { pattern: 'party', render: mockRender },
         { pattern: 'other', render: mockRender },
       ]),
+    ).toMatchObject(['Welcome to my ', { text: 'party', render: mockRender }]);
+  });
+
+  test('payload should works', () => {
+    const content = 'apple_sun_banana_Apple_sun_food_sun';
+    const mockRender1: Rule['render'] = jest.fn();
+    const mockRender2: Rule['render'] = jest.fn();
+
+    expect(
+      compile(content, [
+        { pattern: new RegExp('apple', 'gi'), render: mockRender1 },
+        { pattern: new RegExp('sun'), render: mockRender2 },
+      ]),
     ).toMatchObject([
-      'Welcome to my ',
-      { text: 'party', render: mockRender, extra: { index: 0 } },
+      {
+        text: 'apple',
+        render: mockRender1,
+        payload: { index: 0 },
+      },
+      '_',
+      {
+        text: 'sun',
+        render: mockRender2,
+        payload: { index: 1 },
+      },
+      '_banana_',
+      {
+        text: 'Apple',
+        render: mockRender1,
+        payload: { index: 2 },
+      },
+      '_sun_food_sun',
     ]);
   });
 });
