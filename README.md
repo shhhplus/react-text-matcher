@@ -4,6 +4,8 @@
 
 A React component that matches text using specified rules, supporting string and regular expressions.
 Developed based on [text-matcher](https://www.npmjs.com/package/@shhhplus/text-matcher).
+
+You can receive the matching results through render-props and have full control over how it renders.
 If you just want text highlighting, recommend using [react-highlight-words](https://www.npmjs.com/package/@shhhplus/react-highlight-words), because it provides a simpler API.
 
 ## Install
@@ -22,7 +24,7 @@ import TextMatcher from '@shhhplus/react-text-matcher';
 const Demo = () => {
   return (
     <TextMatcher
-      rules={['everyone', 'birthday']}
+      rules="everyone"
       text="Welcome everyone to come and join my birthday party."
     >
       {(nodes) => {
