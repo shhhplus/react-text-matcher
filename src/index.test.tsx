@@ -1,142 +1,121 @@
 import { render } from '@testing-library/react';
-import { Rule } from './types';
-import TextMatcher from './index';
+import TextMatcher, { TMResult } from './index';
+import { Fragment } from 'react';
+
+const createFn = () => {
+  return jest.fn((result: TMResult) => {
+    return (
+      <>
+        {result.map((node, idx) => {
+          return (
+            <Fragment key={idx}>
+              {typeof node === 'string' ? node : <span>{node.text}</span>}
+            </Fragment>
+          );
+        })}
+      </>
+    );
+  });
+};
 
 describe('TextMatcher', () => {
   test(`component could be updated and unmounted without errors`, () => {
     const text = 'Welcome to my birthday party.';
-    const rules1: Rule[] = [
-      {
-        pattern: 'birthday',
-        render: (content) => {
-          return <span style={{ color: 'greenyellow' }}>{content}</span>;
-        },
-      },
-    ];
+    const fn1 = createFn();
+
     const { unmount, rerender } = render(
-      <TextMatcher rules={rules1}>{text}</TextMatcher>,
+      <TextMatcher rules={['birthday']} text={text}>
+        {fn1}
+      </TextMatcher>,
     );
     expect(() => {
-      const rules2: Rule[] = [
-        {
-          pattern: 'party',
-          render: (content) => {
-            return <span style={{ color: 'red' }}>{content}</span>;
-          },
-        },
-      ];
-      rerender(<TextMatcher rules={rules2}>{text}</TextMatcher>);
+      const fn2 = createFn();
+      rerender(
+        <TextMatcher rules={['party']} text={text}>
+          {fn2}
+        </TextMatcher>,
+      );
       unmount();
     }).not.toThrow();
   });
 
   test(`single matched should works`, () => {
     const text = 'Welcome to my birthday party.';
-    const rules: Rule[] = [
-      {
-        pattern: 'birthday',
-        render: (content) => {
-          return <span style={{ color: 'red' }}>{content}</span>;
-        },
-      },
-    ];
+    const rules = ['birthday'];
+    const fn = createFn();
     const { container } = render(
-      <TextMatcher rules={rules}>{text}</TextMatcher>,
+      <TextMatcher rules={rules} text={text}>
+        {fn}
+      </TextMatcher>,
     );
 
     expect(container.innerHTML).toEqual(
-      `Welcome to my <span style="color: red;">birthday</span> party.`,
+      `Welcome to my <span>birthday</span> party.`,
     );
   });
 
   test(`multiple matched with single rule should works`, () => {
     const text = 'hi, party time. Welcome to my birthday party.';
-    const rules: Rule[] = [
-      {
-        pattern: 'party',
-        render: (content) => {
-          return <span style={{ color: 'red' }}>{content}</span>;
-        },
-      },
-    ];
+    const rules = ['party'];
+    const fn = createFn();
     const { container } = render(
-      <TextMatcher rules={rules}>{text}</TextMatcher>,
+      <TextMatcher rules={rules} text={text}>
+        {fn}
+      </TextMatcher>,
     );
 
     expect(container.innerHTML).toEqual(
-      `hi, <span style="color: red;">party</span> time. Welcome to my birthday <span style="color: red;">party</span>.`,
+      `hi, <span>party</span> time. Welcome to my birthday <span>party</span>.`,
     );
   });
 
   test(`multiple matched with multiple rule should works`, () => {
     const text = 'AppleTodayFoodAppleSunAppleFoodapple';
-    const rules: Rule[] = [
-      {
-        pattern: new RegExp('food', 'gi'),
-        render: (content) => {
-          return <span style={{ color: 'green' }}>{content}</span>;
-        },
-      },
-      {
-        pattern: new RegExp('Apple'),
-        render: (content) => {
-          return <span style={{ color: 'red' }}>{content}</span>;
-        },
-      },
-    ];
+    const rules = [new RegExp('food', 'gi'), new RegExp('Apple')];
+    const fn = createFn();
     const { container } = render(
-      <TextMatcher rules={rules}>{text}</TextMatcher>,
+      <TextMatcher rules={rules} text={text}>
+        {fn}
+      </TextMatcher>,
     );
 
     expect(container.innerHTML).toEqual(
-      `<span style="color: red;">Apple</span>Today<span style="color: green;">Food</span>AppleSunApple<span style="color: green;">Food</span>apple`,
+      `<span>Apple</span>Today<span>Food</span>AppleSunApple<span>Food</span>apple`,
     );
   });
 
   test('empty words should works', () => {
     const text = 'Welcome to my birthday party.';
-    const rules: Rule[] = [
-      {
-        pattern: '',
-        render: (content) => {
-          return <span style={{ color: 'red' }}>{content}</span>;
-        },
-      },
-    ];
+    const rules = [''];
+    const fn = createFn();
     const { container } = render(
-      <TextMatcher rules={rules}>{text}</TextMatcher>,
+      <TextMatcher rules={rules} text={text}>
+        {fn}
+      </TextMatcher>,
     );
 
     expect(container.innerHTML).toEqual(text);
   });
 
   test(`component should update when props changes`, () => {
-    const rules1: Rule[] = [
-      {
-        pattern: 'nothing',
-        render: (content) => {
-          return <span style={{ color: 'green' }}>{content}</span>;
-        },
-      },
-    ];
+    const rules1 = ['nothing'];
+    const fn1 = createFn();
     const { container, rerender } = render(
-      <TextMatcher rules={rules1}>hello, everyone.</TextMatcher>,
+      <TextMatcher rules={rules1} text="hello, everyone.">
+        {fn1}
+      </TextMatcher>,
     );
 
-    const rules2: Rule[] = [
-      {
-        pattern: 'birthday',
-        render: (content) => {
-          return <span style={{ color: 'red' }}>{content}</span>;
-        },
-      },
-    ];
+    const rules2 = ['birthday'];
+    const fn2 = createFn();
     rerender(
-      <TextMatcher rules={rules2}>Welcome to my birthday party.</TextMatcher>,
+      <TextMatcher rules={rules2} text="Welcome to my birthday party.">
+        {fn2}
+      </TextMatcher>,
     );
 
     expect(container.innerHTML).toEqual(
-      `Welcome to my <span style="color: red;">birthday</span> party.`,
+      `Welcome to my <span>birthday</span> party.`,
     );
   });
 });

@@ -1,28 +1,21 @@
-import { FC, Fragment, useMemo } from 'react';
-import { Rule } from './types';
-import compile from './compile';
+import { FC, ReactNode, useMemo } from 'react';
+import createTextMatcher from '@shhhplus/text-matcher';
+
+type TParameters = Parameters<typeof createTextMatcher>;
+type TextMatcher = ReturnType<typeof createTextMatcher>;
+export type TMResult = ReturnType<TextMatcher['exec']>;
 
 type TextMatcherProps = {
-  rules: Rule[];
-  children: string;
+  text: string;
+  rules: TParameters[0];
+  children: (result: TMResult) => ReactNode;
 };
 
-const TextMatcher: FC<TextMatcherProps> = ({ rules, children }) => {
-  const nodes = useMemo(() => compile(children, rules), [children, rules]);
-
-  return (
-    <Fragment>
-      {nodes.map((node, idx) => {
-        return (
-          <Fragment key={idx}>
-            {typeof node === 'string'
-              ? node
-              : node.render(node.text, node.payload)}
-          </Fragment>
-        );
-      })}
-    </Fragment>
-  );
+const TextMatcher: FC<TextMatcherProps> = ({ text, rules, children }) => {
+  const result = useMemo(() => {
+    return createTextMatcher(rules).exec(text);
+  }, [rules, text]);
+  return <>{children(result)}</>;
 };
 
 export default TextMatcher;
