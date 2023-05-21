@@ -1,7 +1,7 @@
 {
   "name": "react-text-matcher",
-  "version": "1.0.2",
-  "description": "A React component that supports regular expression matching and customized rendering.",
+  "version": "2.0.0",
+  "description": "A React component that matches text using specified rules, supporting string and regular expressions.",
   "keywords": [
     "react",
     "component",
@@ -61,6 +61,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@shhhplus/text-matcher": "^1.0.2",
     "react": "^18.0.0"
   }
 }

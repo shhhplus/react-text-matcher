@@ -34,7 +34,7 @@ export default {
     terser(),
     clearDeclaration({
       folder: './dist/types',
-      requirements: ['./src/index.d.ts', './src/types.d.ts'],
+      requirements: ['./src/index.d.ts'],
     }),
     copy({
       targets: [
